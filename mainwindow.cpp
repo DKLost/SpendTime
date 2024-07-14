@@ -260,9 +260,13 @@ void MainWindow::stayTimerHandler2()
             on_timerButton_clicked();
         });
         QString text = QString("<p align='center'>%1<br>%2</p>")
-                           .arg(query.value(3).toString())
-                           .arg(query.value(2).toString());
+                           .arg(query.value(4).toString())
+                           .arg(query.value(3).toString());
         msgBox.setText(text);
+        QSpacerItem* horizontalSpacer = new QSpacerItem(125, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+        QGridLayout* layout = (QGridLayout*)msgBox.layout();
+        layout->addItem(horizontalSpacer, layout->rowCount(), 1, 1, layout->columnCount());
+
         msgBox.setWindowFlags(msgBox.windowFlags() | Qt::WindowStaysOnTopHint);
         msgBox.exec();
         musicPlayer->stopMusic();
