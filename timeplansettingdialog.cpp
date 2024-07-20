@@ -13,7 +13,7 @@ TimePlanSettingDialog::TimePlanSettingDialog(QWidget *parent)
 
     //init dateTimeEdit
     ui->startTimeEdit->setCurrentSection(QDateTimeEdit::MinuteSection);
-    ui->endTimeEdit->setCurrentSection(QDateTimeEdit::MinuteSection);\
+    ui->endTimeEdit->setCurrentSection(QDateTimeEdit::MinuteSection);
 
     //init is_initing
     is_initing = true;
