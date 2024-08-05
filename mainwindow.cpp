@@ -239,17 +239,18 @@ void MainWindow::stayTimerHandler2()
     QSqlQuery query(timePlanSql->getDb());
 
     query.prepare("SELECT * FROM timePlans WHERE week = ? AND 开始时间 = ?");
-    query.bindValue(0,ui->dateEdit->date().dayOfWeek());
+    query.bindValue(0,QDate::currentDate().dayOfWeek());
     query.bindValue(1,currentTime.toString("HH:mm"));
     query.exec();
     if(query.next())
     {
         musicPlayer->playMusic();
         QMessageBox msgBox;
-        QTime endTime = query.value(1).toTime();
+        QTime endTime = query.value(2).toTime();
         connect(&msgBox,&QMessageBox::buttonClicked,this,[=](){
             QTime startTime = QTime::currentTime();
             int d = (endTime.hour() - startTime.hour()) * 60 + endTime.minute() - startTime.minute();
+            qDebug() << d;
             if(d <= 0)
                 return;
 
@@ -257,6 +258,7 @@ void MainWindow::stayTimerHandler2()
                 on_timerButton_clicked();
 
             ui->shotTimeLineEdit->setText(QString::number(d));
+            qDebug() << 1;
             on_timerButton_clicked();
         });
         QString text = QString("<p align='center'>%1<br>%2</p>")
