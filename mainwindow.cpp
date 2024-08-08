@@ -250,7 +250,6 @@ void MainWindow::stayTimerHandler2()
         connect(&msgBox,&QMessageBox::buttonClicked,this,[=](){
             QTime startTime = QTime::currentTime();
             int d = (endTime.hour() - startTime.hour()) * 60 + endTime.minute() - startTime.minute();
-            qDebug() << d;
             if(d <= 0)
                 return;
 
@@ -258,7 +257,6 @@ void MainWindow::stayTimerHandler2()
                 on_timerButton_clicked();
 
             ui->shotTimeLineEdit->setText(QString::number(d));
-            qDebug() << 1;
             on_timerButton_clicked();
         });
         QString text = QString("<p align='center'>%1<br>%2</p>")
@@ -337,6 +335,8 @@ void MainWindow::on_setMusicButton_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this,
                                             "打开音乐", "./", tr("Music Files (*.mp3 *.wav *.flac)"));
+    if(fileName.isNull() || fileName.isEmpty() || fileName == "")
+        return;
     QFile file("config.dat");
     file.open(QIODevice::ReadWrite);
     QDataStream fs(&file);
@@ -380,7 +380,6 @@ void MainWindow::on_weekComboBox_currentIndexChanged(int index)
 void MainWindow::on_shotTimeLineEdit_textChanged(const QString &arg1)
 {
     int duration = arg1.toInt();
-    qDebug() << duration;
     if(duration == 0)
         duration = ui->shotTimeLineEdit->placeholderText().toInt();
     timePlanSettingDialog->setCurrentDuration(duration);
