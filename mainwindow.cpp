@@ -65,15 +65,19 @@ MainWindow::MainWindow(QWidget *parent)
     timePlanTableModel = new QSqlTableModel(this,timePlanSql->getDb());
     timePlanTableModel->setTable("timePlans");
     ui->timePlanTableView->setModel(timePlanTableModel);
-    QString queryString2 = QString("SELECT * FROM timePlans WHERE week = %1")
-                              .arg(QDate::currentDate().dayOfWeek());
-    timePlanTableModel->setQuery(queryString2,timePlanSql->getDb());
+    // QString queryString2 = QString("SELECT * FROM timePlans WHERE week = %1")
+    //                           .arg(QDate::currentDate().dayOfWeek());
+    // timePlanTableModel->setQuery(queryString2,timePlanSql->getDb());
+    QString condString = QString("week = %1").arg(QDate::currentDate().dayOfWeek());
+    timePlanTableModel->setFilter(condString);
+
     ui->timePlanTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->timePlanTableView->hideColumn(0);
     ui->timePlanTableView->hideColumn(1);
     ui->timePlanTableView->hideColumn(2);
     timePlanTableModel->setSort(1,Qt::AscendingOrder);
     ui->timePlanTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->timePlanTableView->sortByColumn(1,Qt::AscendingOrder);
 
     //init dateEdit
     ui->dateEdit->setDate(QDate::currentDate());
@@ -96,6 +100,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     //init timePlanSettingDialog
     timePlanSettingDialog->setTimePlanSql(timePlanSql);
+
+    //init copyPlanToDialog
+    copyPlanToDialog = new CopyPlanToDialog(this);
 }
 
 MainWindow::~MainWindow()
@@ -200,14 +207,18 @@ void MainWindow::popTimeOverBox()
     msgBox.exec();
     musicPlayer->stopMusic();
 }
+
 void MainWindow::timerHandler()
 {
     timeCounter++;
     ui->timerLineEdit->setText(ToolFunctions::sec2string(timeCounter));
     if(timeCounter >= oneTimeShot)
     {
-        on_timerButton_clicked();
-        popTimeOverBox();
+        if(ui->timerButton->text() == "结束计时")
+        {
+            on_timerButton_clicked();
+            popTimeOverBox();
+        }
     }
 }
 
@@ -215,6 +226,11 @@ void MainWindow::stayTimerHandler1()
 {
     QTime currentTime = QTime::currentTime();
     ui->timeLabel->setText(currentTime.toString("HH:mm:ss"));
+    if(currentTime == QTime::fromString("00:00:01"))
+    {
+        ui->dateEdit->setDate(QDate::currentDate());
+    }
+
     if(currentTime == QTime::fromString("23:59:59"))
     {
         if(ui->timerButton->text() == "结束计时")
@@ -223,54 +239,52 @@ void MainWindow::stayTimerHandler1()
             popTimeOverBox();
         }
     }
-    if(currentTime == QTime::fromString("00:00:01"))
-    {
-        ui->dateEdit->setDate(QDate::currentDate());
-    }
 }
 
 void MainWindow::stayTimerHandler2()
 {
-
     QTime currentTime = QTime::currentTime();
-    if(currentTime.second() != 0)
-        return;
 
-    QSqlQuery query(timePlanSql->getDb());
-
-    query.prepare("SELECT * FROM timePlans WHERE week = ? AND 开始时间 = ?");
-    query.bindValue(0,QDate::currentDate().dayOfWeek());
-    query.bindValue(1,currentTime.toString("HH:mm"));
-    query.exec();
-    if(query.next())
+    if(currentTime.second() == 0)
     {
-        musicPlayer->playMusic();
-        QMessageBox msgBox;
-        QTime endTime = query.value(2).toTime();
-        connect(&msgBox,&QMessageBox::buttonClicked,this,[=](){
-            QTime startTime = QTime::currentTime();
-            int d = (endTime.hour() - startTime.hour()) * 60 + endTime.minute() - startTime.minute();
-            if(d <= 0)
-                return;
+        QSqlQuery query(timePlanSql->getDb());
 
-            if(ui->timerButton->text() == "结束计时")
+        query.prepare("SELECT * FROM timePlans WHERE week = ? AND 开始时间 = ?");
+        query.bindValue(0,QDate::currentDate().dayOfWeek());
+        query.bindValue(1,currentTime.toString("HH:mm"));
+        query.exec();
+        if(query.next())
+        {
+            musicPlayer->playMusic();
+            QMessageBox msgBox;
+            QTime endTime = query.value(2).toTime();
+            connect(&msgBox,&QMessageBox::buttonClicked,this,[=](){
+                QTime startTime = QTime::currentTime();
+                int d = (endTime.hour() - startTime.hour()) * 60 + endTime.minute() - startTime.minute();
+                if(d <= 0)
+                    return;
+
+                if(ui->timerButton->text() == "结束计时")
+                    on_timerButton_clicked();
+
+                ui->shotTimeLineEdit->setText(QString::number(d));
                 on_timerButton_clicked();
+            });
+            QString text = QString("<p align='center'>%1<br>%2</p>")
+                               .arg(query.value(4).toString())
+                               .arg(query.value(3).toString());
+            msgBox.setText(text);
+            QSpacerItem* horizontalSpacer = new QSpacerItem(125, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+            QGridLayout* layout = (QGridLayout*)msgBox.layout();
+            layout->addItem(horizontalSpacer, layout->rowCount(), 1, 1, layout->columnCount());
 
-            ui->shotTimeLineEdit->setText(QString::number(d));
-            on_timerButton_clicked();
-        });
-        QString text = QString("<p align='center'>%1<br>%2</p>")
-                           .arg(query.value(4).toString())
-                           .arg(query.value(3).toString());
-        msgBox.setText(text);
-        QSpacerItem* horizontalSpacer = new QSpacerItem(125, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-        QGridLayout* layout = (QGridLayout*)msgBox.layout();
-        layout->addItem(horizontalSpacer, layout->rowCount(), 1, 1, layout->columnCount());
-
-        msgBox.setWindowFlags(msgBox.windowFlags() | Qt::WindowStaysOnTopHint);
-        msgBox.exec();
-        musicPlayer->stopMusic();
+            msgBox.setWindowFlags(msgBox.windowFlags() | Qt::WindowStaysOnTopHint);
+            msgBox.exec();
+            musicPlayer->stopMusic();
+        }
     }
+
+
 }
 
 void MainWindow::on_comboBox_currentTextChanged(const QString &arg1)
@@ -350,9 +364,8 @@ void MainWindow::on_addTimePlanButton_clicked()
     QString action = ui->comboBox->currentText();
     timePlanSettingDialog->initDialog(action,ui->weekComboBox->currentIndex() + 1);
     timePlanSettingDialog->exec();
-    QString queryString = QString("SELECT * FROM timePlans WHERE week = %1")
-                              .arg(ui->weekComboBox->currentIndex() + 1);
-    timePlanTableModel->setQuery(queryString,timePlanSql->getDb());
+    QString condString = QString("week = %1").arg(ui->weekComboBox->currentIndex() + 1);
+    timePlanTableModel->setFilter(condString);
 }
 
 
@@ -363,17 +376,15 @@ void MainWindow::on_delTimePlanButton_clicked()
     QTime startTime = index.siblingAtColumn(1).data().toTime();
     timePlanSql->delPlan(week,startTime);
     timePlanTableModel->setSort(1,Qt::AscendingOrder);
-    QString queryString = QString("SELECT * FROM timePlans WHERE week = %1")
-                              .arg(ui->weekComboBox->currentIndex() + 1);
-    timePlanTableModel->setQuery(queryString,timePlanSql->getDb());
+    QString condString = QString("week = %1").arg(ui->weekComboBox->currentIndex() + 1);
+    timePlanTableModel->setFilter(condString);
 }
 
 
 void MainWindow::on_weekComboBox_currentIndexChanged(int index)
 {
-    QString queryString = QString("SELECT * FROM timePlans WHERE week = %1")
-                               .arg(index + 1);
-    timePlanTableModel->setQuery(queryString,timePlanSql->getDb());
+    QString condString = QString("week = %1").arg(index + 1);
+    timePlanTableModel->setFilter(condString);
 }
 
 
@@ -383,5 +394,37 @@ void MainWindow::on_shotTimeLineEdit_textChanged(const QString &arg1)
     if(duration == 0)
         duration = ui->shotTimeLineEdit->placeholderText().toInt();
     timePlanSettingDialog->setCurrentDuration(duration);
+}
+
+
+void MainWindow::on_pushButton_clicked()
+{
+    copyPlanToDialog->setWeek(0);
+    copyPlanToDialog->exec();
+    int week = copyPlanToDialog->getWeek();
+    if(week == 0 || (week - 1) == ui->weekComboBox->currentIndex())
+        return;
+
+    QSqlQuery query(timePlanSql->getDb());
+    QSqlQuery query2(timePlanSql->getDb());
+
+    query.prepare("DELETE FROM timePlans WHERE week = ?");
+    query.bindValue(0,week);
+    query.exec();
+
+    query.prepare("SELECT * FROM timePlans WHERE week = ?");
+    query.bindValue(0,ui->weekComboBox->currentIndex() + 1);
+    query.exec();
+
+    while(query.next())
+    {
+        query2.prepare("INSERT INTO timePlans VALUES(?,?,?,?,?)");
+        query2.bindValue(0,week);
+        query2.bindValue(1,query.value(1).toString());
+        query2.bindValue(2,query.value(2).toString());
+        query2.bindValue(3,query.value(3).toString());
+        query2.bindValue(4,query.value(4).toString());
+        query2.exec();
+    }
 }
 

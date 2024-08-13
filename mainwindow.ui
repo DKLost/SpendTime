@@ -144,7 +144,7 @@
        </layout>
       </item>
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0">
+       <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0">
         <item>
          <widget class="QLabel" name="label_3">
           <property name="text">
@@ -263,6 +263,13 @@
          <widget class="QPushButton" name="setMusicButton">
           <property name="text">
            <string>设置提醒铃声</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton">
+          <property name="text">
+           <string>复制当前时间规划到</string>
           </property>
          </widget>
         </item>

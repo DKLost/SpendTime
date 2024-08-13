@@ -10,6 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     complexlineedit.cpp \
+    copyplantodialog.cpp \
     main.cpp \
     mainwindow.cpp \
     musicplayer.cpp \
@@ -23,6 +24,7 @@ SOURCES += \
 
 HEADERS += \
     complexlineedit.h \
+    copyplantodialog.h \
     mainwindow.h \
     musicplayer.h \
     mytimeedit.h \
@@ -34,6 +36,7 @@ HEADERS += \
     toolfunctions.h
 
 FORMS += \
+    copyplantodialog.ui \
     mainwindow.ui \
     timeplansettingdialog.ui
 

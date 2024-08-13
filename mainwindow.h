@@ -14,6 +14,7 @@
 #include "musicplayer.h"
 #include "timeplansettingdialog.h"
 #include "timeplansql.h"
+#include "copyplantodialog.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -78,7 +79,10 @@ private slots:
 
     void on_shotTimeLineEdit_textChanged(const QString &arg1);
 
+    void on_pushButton_clicked();
+
 private:
     Ui::MainWindow *ui;
+    CopyPlanToDialog *copyPlanToDialog;
 };
 #endif // MAINWINDOW_H
