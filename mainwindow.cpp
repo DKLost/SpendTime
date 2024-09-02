@@ -226,12 +226,12 @@ void MainWindow::stayTimerHandler1()
 {
     QTime currentTime = QTime::currentTime();
     ui->timeLabel->setText(currentTime.toString("HH:mm:ss"));
-    if(currentTime == QTime::fromString("00:00:01"))
+    if(currentTime.toString("HH:mm:ss") == "00:00:01")
     {
         ui->dateEdit->setDate(QDate::currentDate());
     }
 
-    if(currentTime == QTime::fromString("23:59:59"))
+    if(currentTime.toString("HH:mm:ss") == "23:59:59")
     {
         if(ui->timerButton->text() == "结束计时")
         {
@@ -258,6 +258,7 @@ void MainWindow::stayTimerHandler2()
             musicPlayer->playMusic();
             QMessageBox msgBox;
             QTime endTime = query.value(2).toTime();
+            QString action = query.value(4).toString();
             connect(&msgBox,&QMessageBox::buttonClicked,this,[=](){
                 QTime startTime = QTime::currentTime();
                 int d = (endTime.hour() - startTime.hour()) * 60 + endTime.minute() - startTime.minute();
@@ -267,6 +268,7 @@ void MainWindow::stayTimerHandler2()
                 if(ui->timerButton->text() == "结束计时")
                     on_timerButton_clicked();
 
+                ui->comboBox->setCurrentText(action);
                 ui->shotTimeLineEdit->setText(QString::number(d));
                 on_timerButton_clicked();
             });
