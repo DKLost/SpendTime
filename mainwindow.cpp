@@ -174,6 +174,9 @@ void MainWindow::on_timerButton_clicked()
         else
             oneTimeShot = ui->shotTimeLineEdit->text().toInt() * 60;
 
+        if(ui->shotTtimeEdit->time().isValid())
+            oneTimeShot = ui->shotTtimeEdit->time().msecsSinceStartOfDay()/1000;
+
         timer->start();
         timeCounter = 0;
         ui->timerLineEdit->setText(ToolFunctions::sec2string(timeCounter));
